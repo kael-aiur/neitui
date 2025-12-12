@@ -8,12 +8,22 @@ import {
   FileText, 
   Sparkles,
   ChevronRight,
-  CheckCircle2
+  CheckCircle2,
+  Lock,
+  Mail,
+  ArrowRight
 } from 'lucide-react';
 import { ReferrerTab, MOCK_JOBS } from '../types';
 import { generateJobDescription } from '../services/geminiService';
 
 const ReferrerPage: React.FC = () => {
+  // Login State
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Dashboard State
   const [activeTab, setActiveTab] = useState<ReferrerTab>(ReferrerTab.DASHBOARD);
   
   // Create Job Form State
@@ -31,6 +41,18 @@ const ReferrerPage: React.FC = () => {
     offers: 3
   };
 
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoggedIn(true);
+      setIsLoading(false);
+    }, 1000);
+  };
+
   const handleGenerateAI = async () => {
     if (!jobTitle) return;
     setIsGenerating(true);
@@ -39,7 +61,90 @@ const ReferrerPage: React.FC = () => {
     setIsGenerating(false);
   };
 
-  const renderContent = () => {
+  // --- Render Functions ---
+
+  const renderLogin = () => (
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <Lock className="h-6 w-6 text-blue-600" />
+          </div>
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">内推官登录</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            请使用您的企业邮箱验证员工身份
+          </p>
+        </div>
+        
+        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
+                企业邮箱
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email-address"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="appearance-none relative block w-full pl-10 px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="name@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                密码
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  className="appearance-none relative block w-full pl-10 px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white ${
+                isLoading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-lg shadow-blue-200`}
+            >
+              {isLoading ? '验证中...' : '登录 / 注册'}
+              {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-between text-xs text-gray-500 mt-4">
+            <a href="#" className="hover:text-blue-600">忘记密码?</a>
+            <a href="#" className="hover:text-blue-600">申请企业入驻</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  const renderDashboardContent = () => {
     switch (activeTab) {
       case ReferrerTab.DASHBOARD:
         return (
@@ -218,6 +323,10 @@ const ReferrerPage: React.FC = () => {
     }
   };
 
+  if (!isLoggedIn) {
+    return renderLogin();
+  }
+
   return (
     <div className="bg-gray-50 min-h-[calc(100vh-64px)]">
       <div className="container mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
@@ -265,12 +374,19 @@ const ReferrerPage: React.FC = () => {
                 {activeTab === ReferrerTab.CREATE_POST && <ChevronRight className="w-4 h-4" />}
               </button>
             </div>
+            
+             <button 
+                onClick={() => setIsLoggedIn(false)}
+                className="w-full mt-4 flex items-center justify-center px-4 py-2 rounded-xl text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+              >
+                退出登录
+              </button>
           </div>
         </aside>
 
         {/* Main Content Area */}
         <main className="flex-grow">
-          {renderContent()}
+          {renderDashboardContent()}
         </main>
       </div>
     </div>
